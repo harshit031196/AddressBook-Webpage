@@ -1,3 +1,4 @@
+let isUpdate = false;
 let contactObject = {};
 window.addEventListener('DOMContentLoaded', (event) => {
   const name = document.querySelector('#name');
@@ -11,7 +12,6 @@ window.addEventListener('DOMContentLoaded', (event) => {
       (new Contact()).name = name.value;
       setTextValue('.name-error', "");
     } catch (error) {
-      alert('here')
       setTextValue('.name-error', error);
     }
   });
@@ -60,14 +60,24 @@ window.addEventListener('DOMContentLoaded', (event) => {
       setTextValue('.phoneNumber-error', error);
     }
   });
+  checkForUpdate();
 });
+
+const checkForUpdate = () => {
+  const contact = localStorage.getItem('editPerson');
+  isUpdate = contact ? true : false;
+  if (!isUpdate) {
+    return;
+  }
+  contactObject = JSON.parse(contact);
+  setForm();
+}
 
 const save = (event) => {
   if (anyError()) {
     alert("Cannot submit the form!");
     return;
   }
-
   event.preventDefault();
   event.stopPropagation();
   try {
@@ -79,6 +89,16 @@ const save = (event) => {
     alert(error);
   }
 };
+
+const setForm = () => {
+  setValue('#name', contactObject._name);
+  setValue('#address', contactObject._address);
+  setValue('#city', contactObject._city);
+  setValue('#state', contactObject._state);
+  setValue('#zip', contactObject._zip);
+  setValue('#phoneNumber', contactObject._phoneNumber);
+  setValue('#email', contactObject._email);
+}
 
 const resetForm = () => {
   setValue('#name', '');
@@ -109,9 +129,15 @@ const createAndupdateStorage = () => {
   if (!addressBook) {
     addressBook = [createContact()];
   } else {
-    addressBook.push(createContact());
+    let contact = addressBook.find(contactObj => contactObj._id == contactObject._id);
+    if (!contact) {
+      addressBook.push(createContact());
+    } else {
+      const index = addressBook.map(contactObj => contactObj._id)
+                               .indexOf(contact._id);
+      addressBook.splice(index, 1, createContact(contact._id));
+    }
   }
-  alert(addressBook.toString());
   localStorage.setItem("AddressBook", JSON.stringify(addressBook));
 }
 
